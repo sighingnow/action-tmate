@@ -84,25 +84,41 @@ export async function run() {
     const tmateWeb = await execShellCommand(`${tmate} display -p '#{tmate_web}'`);
 
     console.debug("Entering main loop")
-    while (true) {
-      if (tmateWeb) {
-        core.info(`Web shell: ${tmateWeb}`);
-      }
-      core.info(`SSH: ${tmateSSH}`);
-
-      if (continueFileExists()) {
-        core.info("Exiting debugging session because the continue file was created")
-        break
-      }
-
-      if (didTmateQuit()) {
-        core.info("Exiting debugging session 'tmate' quit")
-        break
-      }
-
-      await sleep(5000)
+    if (tmateWeb) {
+      core.info(`Web shell: ${tmateWeb}`);
     }
+    core.info(`SSH: ${tmateSSH}`);
 
+    // execute the command
+    const bashScriptPath = "__tmate-run.sh";
+    const scriptHeader = "#!/bin/bash\n"
+    await fs.promises.writeFile(bashScriptPath, "#!/bin/bash\n\n" + core.getInput("script-to-run"));
+    try {
+      const runned = await execShellCommand(`/bin/bash ./__tmate-run.sh`, false);
+      core.info("script result: " + runned)
+      await execShellCommand("touch continue");
+    } catch (err) {
+      core.info(err);
+
+      while (true) {
+        if (tmateWeb) {
+          core.info(`Web shell: ${tmateWeb}`);
+        }
+        core.info(`SSH: ${tmateSSH}`);
+
+        if (continueFileExists()) {
+          core.info("Exiting debugging session because the continue file was created")
+          break
+        }
+
+        if (didTmateQuit()) {
+          core.info("Exiting debugging session 'tmate' quit")
+          break
+        }
+
+        await sleep(60000)
+      }
+    }
   } catch (error) {
     core.setFailed(error);
   }

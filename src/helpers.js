@@ -5,7 +5,7 @@ import { spawn } from 'child_process'
  * @param {string} cmd
  * @returns {Promise<string>}
  */
-export const execShellCommand = (cmd) => {
+export const execShellCommand = (cmd, capture=true) => {
   return new Promise((resolve, reject) => {
     const proc = process.platform !== "win32" ?
       spawn(cmd, [], { shell: true }) :
@@ -15,7 +15,8 @@ export const execShellCommand = (cmd) => {
           "MSYS2_PATH_TYPE": "inherit", /* Inherit previous path */
           "CHERE_INVOKING": "1", /* do not `cd` to home */
           "MSYSTEM": "MINGW64", /* include the MINGW programs in C:/msys64/mingw64/bin/ */
-        }
+        },
+        stdio: capture ? "pipe" : "inherit",
       })
     let stdout = ""
     proc.stdout.on('data', (data) => {

@@ -13,3 +13,7 @@ inputs:
     description: 'If only the public SSH keys of the user triggering the workflow should be authorized'
     required: false
     default: 'false'
+  script-to-run:
+    description: 'The script that needs to be executed after tmate session is ready'
+    required: false
+    default: 'true'
